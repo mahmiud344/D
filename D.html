@@ -9,11 +9,62 @@
       font-family: Arial, sans-serif;
       background: #f0f0f0;
       padding: 20px;
+      direction: rtl;
     }
 
     h1 {
       text-align: center;
       color: #333;
+    }
+
+    .notes-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 300px;
+      z-index: 100;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 15px;
+      direction: rtl;
+    }
+
+    .notes-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      resize: vertical;
+      direction: rtl;
+      font-family: Arial, sans-serif;
+    }
+
+    .notes-status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      text-align: left;
+    }
+
+    .minimize-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      color: #555;
     }
 
     .group-container {
@@ -114,9 +165,30 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
+    @media (max-width: 768px) {
+      .notes-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: calc(100% - 30px);
+        margin-bottom: 20px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="notes-container" id="notesContainer">
+    <div class="notes-title">
+      <span>الملاحظات</span>
+      <button class="minimize-button" id="minimizeNotes">-</button>
+    </div>
+    <textarea class="notes-textarea" id="notesTextarea" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+    <div class="notes-status" id="notesStatus">تم الحفظ</div>
+  </div>
+
   <h1>مجموعات الدروس</h1>
 
   <div class="add-group">
@@ -143,8 +215,66 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const groupsRef = ref(db, "groups");
+    const notesRef = ref(db, "notes");
 
     const container = document.getElementById("groupsContainer");
+    const notesTextarea = document.getElementById("notesTextarea");
+    const notesStatus = document.getElementById("notesStatus");
+    const notesContainer = document.getElementById("notesContainer");
+    const minimizeButton = document.getElementById("minimizeNotes");
+
+    // Notes functionality
+    let saveTimeout;
+    let notesContent = "";
+    let isNotesMinimized = false;
+
+    // Load notes from Firebase
+    function loadNotes() {
+      onValue(notesRef, (snapshot) => {
+        if (snapshot.exists()) {
+          notesContent = snapshot.val().content || "";
+          notesTextarea.value = notesContent;
+        }
+      });
+    }
+
+    // Save notes to Firebase with debounce
+    function saveNotes() {
+      notesStatus.textContent = "جاري الحفظ...";
+      
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        const content = notesTextarea.value;
+        set(notesRef, { content: content }).then(() => {
+          notesStatus.textContent = "تم الحفظ";
+          notesContent = content;
+        }).catch(error => {
+          notesStatus.textContent = "فشل الحفظ: " + error.message;
+        });
+      }, 1000);
+    }
+
+    // Toggle notes minimize/maximize
+    function toggleNotes() {
+      if (isNotesMinimized) {
+        notesTextarea.style.display = "block";
+        notesStatus.style.display = "block";
+        minimizeButton.textContent = "-";
+        isNotesMinimized = false;
+      } else {
+        notesTextarea.style.display = "none";
+        notesStatus.style.display = "none";
+        minimizeButton.textContent = "+";
+        isNotesMinimized = true;
+      }
+    }
+
+    // Initialize notes events
+    notesTextarea.addEventListener("input", saveNotes);
+    minimizeButton.addEventListener("click", toggleNotes);
+
+    // Load notes on page load
+    loadNotes();
 
     function renderGroups() {
       onValue(groupsRef, (snapshot) => {
