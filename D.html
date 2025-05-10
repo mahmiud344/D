@@ -169,12 +169,16 @@
     @media (max-width: 768px) {
       .notes-container {
         position: relative;
-        top: 0;
+        top: 0 !important;
         left: 0;
         width: calc(100% - 30px);
         margin-bottom: 20px;
         margin-left: auto;
         margin-right: auto;
+      }
+      
+      #notes2Container {
+        margin-top: 20px;
       }
     }
   </style>
@@ -182,11 +186,20 @@
 <body>
   <div class="notes-container" id="notesContainer">
     <div class="notes-title">
-      <span>الملاحظات</span>
+      <span>الملاحظات 1</span>
       <button class="minimize-button" id="minimizeNotes">-</button>
     </div>
     <textarea class="notes-textarea" id="notesTextarea" placeholder="اكتب ملاحظاتك هنا..."></textarea>
     <div class="notes-status" id="notesStatus">تم الحفظ</div>
+  </div>
+  
+  <div class="notes-container" id="notes2Container" style="top: 250px;">
+    <div class="notes-title">
+      <span>الملاحظات 2</span>
+      <button class="minimize-button" id="minimizeNotes2">-</button>
+    </div>
+    <textarea class="notes-textarea" id="notes2Textarea" placeholder="اكتب ملاحظاتك الإضافية هنا..."></textarea>
+    <div class="notes-status" id="notes2Status">تم الحفظ</div>
   </div>
 
   <h1>مجموعات الدروس</h1>
@@ -224,16 +237,34 @@
     const minimizeButton = document.getElementById("minimizeNotes");
 
     // Notes functionality
-    let saveTimeout;
+    const notes2Textarea = document.getElementById("notes2Textarea");
+    const notes2Status = document.getElementById("notes2Status");
+    const notes2Container = document.getElementById("notes2Container");
+    const minimizeButton2 = document.getElementById("minimizeNotes2");
+    
+    let saveTimeout, saveTimeout2;
     let notesContent = "";
+    let notes2Content = "";
     let isNotesMinimized = false;
+    let isNotes2Minimized = false;
+    
+    const notes2Ref = ref(db, "notes2");
 
     // Load notes from Firebase
     function loadNotes() {
+      // Load first notes
       onValue(notesRef, (snapshot) => {
         if (snapshot.exists()) {
           notesContent = snapshot.val().content || "";
           notesTextarea.value = notesContent;
+        }
+      });
+      
+      // Load second notes
+      onValue(notes2Ref, (snapshot) => {
+        if (snapshot.exists()) {
+          notes2Content = snapshot.val().content || "";
+          notes2Textarea.value = notes2Content;
         }
       });
     }
@@ -253,6 +284,22 @@
         });
       }, 1000);
     }
+    
+    // Save notes2 to Firebase with debounce
+    function saveNotes2() {
+      notes2Status.textContent = "جاري الحفظ...";
+      
+      clearTimeout(saveTimeout2);
+      saveTimeout2 = setTimeout(() => {
+        const content = notes2Textarea.value;
+        set(notes2Ref, { content: content }).then(() => {
+          notes2Status.textContent = "تم الحفظ";
+          notes2Content = content;
+        }).catch(error => {
+          notes2Status.textContent = "فشل الحفظ: " + error.message;
+        });
+      }, 1000);
+    }
 
     // Toggle notes minimize/maximize
     function toggleNotes() {
@@ -268,10 +315,29 @@
         isNotesMinimized = true;
       }
     }
+    
+    // Toggle notes2 minimize/maximize
+    function toggleNotes2() {
+      if (isNotes2Minimized) {
+        notes2Textarea.style.display = "block";
+        notes2Status.style.display = "block";
+        minimizeButton2.textContent = "-";
+        isNotes2Minimized = false;
+      } else {
+        notes2Textarea.style.display = "none";
+        notes2Status.style.display = "none";
+        minimizeButton2.textContent = "+";
+        isNotes2Minimized = true;
+      }
+    }
 
     // Initialize notes events
     notesTextarea.addEventListener("input", saveNotes);
     minimizeButton.addEventListener("click", toggleNotes);
+    
+    // Initialize notes2 events
+    notes2Textarea.addEventListener("input", saveNotes2);
+    minimizeButton2.addEventListener("click", toggleNotes2);
 
     // Load notes on page load
     loadNotes();
@@ -300,17 +366,36 @@
             </div>
             <table id="table-${groupId}" style="display: none;">
               <thead>
-                <tr><th>اسم الدرس</th><th>الرابط</th><th>حذف</th></tr>
+                <tr><th>تم</th><th>اسم الدرس</th><th>الرابط</th><th>حذف</th></tr>
               </thead>
               <tbody></tbody>
             </table>
           `;
 
+          // التعامل مع النقر على المجموعة لإظهار قائمة الروابط
           card.addEventListener("click", (e) => {
-            if (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT" || e.target.isContentEditable) return;
+            // لا نقوم بأي شيء إذا تم النقر على زر أو حقل إدخال أو عنصر قابل للتحرير
+            if (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT" || 
+                e.target.tagName === "A" || e.target.isContentEditable || 
+                e.target.tagName === "CHECKBOX" || e.target.type === "checkbox") {
+              return;
+            }
+            
+            // الحصول على الجدول وإظهاره إذا كان مخفيًا
             const table = card.querySelector("table");
-            table.style.display = table.style.display === "none" ? "table" : "none";
+            if (table.style.display === "none") {
+              table.style.display = "table";
+              
+              // حفظ حالة الجدول في localStorage
+              localStorage.setItem(`table-${groupId}-open`, "true");
+            }
           });
+          
+          // التحقق من localStorage للتأكد من عرض الجداول المفتوحة سابقًا
+          const table = card.querySelector("table");
+          if (localStorage.getItem(`table-${groupId}-open`) === "true") {
+            table.style.display = "table";
+          }
 
           container.appendChild(card);
 
@@ -322,10 +407,12 @@
             lessonsSnap.forEach(lessonSnap => {
               const lessonId = lessonSnap.key;
               const lesson = lessonSnap.val();
+              const isCompleted = lesson.completed || false;
               const row = document.createElement("tr");
               row.innerHTML = `
-                <td>${lesson.name}</td>
-                <td><a href="${lesson.link}" target="_blank">رابط</a></td>
+                <td><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleLessonComplete('${groupId}', '${lessonId}', this.checked)"></td>
+                <td><span contenteditable="true" onblur="renameLessonName('${groupId}', '${lessonId}', this.innerText.trim())">${lesson.name}</span></td>
+                <td><a href="${lesson.link}" target="_blank" onclick="markLessonVisited('${groupId}', '${lessonId}')">رابط</a></td>
                 <td><button onclick="deleteLesson('${groupId}', '${lessonId}')">حذف</button></td>
               `;
               tableBody.appendChild(row);
@@ -361,7 +448,7 @@
       const link = document.getElementById(`link-${groupId}`).value.trim();
       if (name && link) {
         const lessonsRef = ref(db, `groups/${groupId}/lessons`);
-        push(lessonsRef, { name, link });
+        push(lessonsRef, { name, link, completed: false });
         document.getElementById(`name-${groupId}`).value = "";
         document.getElementById(`link-${groupId}`).value = "";
       }
@@ -369,6 +456,27 @@
 
     window.deleteLesson = function(groupId, lessonId) {
       remove(ref(db, `groups/${groupId}/lessons/${lessonId}`));
+    };
+    
+    window.toggleLessonComplete = function(groupId, lessonId, isCompleted) {
+      const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
+      update(lessonRef, { completed: isCompleted });
+    };
+    
+    window.markLessonVisited = function(groupId, lessonId) {
+      // تعليم الدرس كمكتمل
+      const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
+      update(lessonRef, { completed: true });
+      
+      // حفظ حالة فتح الجدول في localStorage للاحتفاظ بها بعد العودة من الرابط
+      localStorage.setItem(`table-${groupId}-open`, "true");
+    };
+    
+    window.renameLessonName = function(groupId, lessonId, newName) {
+      if (newName) {
+        const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
+        update(lessonRef, { name: newName });
+      }
     };
 
     renderGroups();
