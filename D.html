@@ -67,6 +67,168 @@
       color: #555;
     }
 
+    /* File management styles */
+    .file-manager {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 350px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 15px;
+      direction: rtl;
+      z-index: 100;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .file-manager-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-upload-section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-label {
+      display: block;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px dashed #007bff;
+      transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    .file-input-label.drag-over {
+      background: #0056b3;
+      border-color: #0056b3;
+      transform: scale(1.02);
+    }
+
+    .upload-button {
+      width: 100%;
+      padding: 8px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .upload-button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .upload-status {
+      font-size: 12px;
+      margin-top: 5px;
+      text-align: center;
+    }
+
+    .file-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 5px;
+      background: #f8f9fa;
+    }
+
+    .file-name {
+      flex: 1;
+      margin-right: 10px;
+      word-break: break-all;
+      font-size: 14px;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .download-button {
+      padding: 4px 8px;
+      background: #17a2b8;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-file-button {
+      padding: 4px 8px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #007bff;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
     .group-container {
       display: flex;
       flex-wrap: wrap;
@@ -180,6 +342,14 @@
       #notes2Container {
         margin-top: 20px;
       }
+
+      .file-manager {
+        position: relative;
+        bottom: 0;
+        left: 0;
+        width: calc(100% - 30px);
+        margin: 20px auto;
+      }
     }
   </style>
 </head>
@@ -202,6 +372,32 @@
     <div class="notes-status" id="notes2Status">تم الحفظ</div>
   </div>
 
+  <!-- File Manager Section -->
+  <div class="file-manager" id="fileManager">
+    <div class="file-manager-title">
+      <span>إدارة الملفات</span>
+      <button class="minimize-button" id="minimizeFiles">-</button>
+    </div>
+    
+    <div class="file-upload-section" id="fileUploadSection">
+      <div class="file-input-wrapper">
+        <input type="file" class="file-input" id="fileInput" multiple>
+        <label for="fileInput" class="file-input-label" id="fileInputLabel">
+          اختر الملفات أو اسحبها هنا
+        </label>
+      </div>
+      <button class="upload-button" id="uploadButton" disabled>رفع الملفات</button>
+      <div class="upload-status" id="uploadStatus"></div>
+      <div class="progress-bar" id="progressBar" style="display: none;">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <!-- Uploaded files will be displayed here -->
+    </div>
+  </div>
+
   <h1>مجموعات الدروس</h1>
 
   <div class="add-group">
@@ -214,7 +410,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
     import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-storage.js";
 
+    // Updated Firebase config with correct credentials
     const firebaseConfig = {
       apiKey: "AIzaSyCzfShOqIBF-VUPd7SpQgbDurQlM2TML5I",
       authDomain: "majsa-b6109.firebaseapp.com",
@@ -227,8 +425,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const storage = getStorage(app);
     const groupsRef = ref(db, "groups");
     const notesRef = ref(db, "notes");
+    const filesRef = ref(db, "files");
 
     const container = document.getElementById("groupsContainer");
     const notesTextarea = document.getElementById("notesTextarea");
@@ -242,11 +442,25 @@
     const notes2Container = document.getElementById("notes2Container");
     const minimizeButton2 = document.getElementById("minimizeNotes2");
     
+    // File management elements
+    const fileInput = document.getElementById("fileInput");
+    const fileInputLabel = document.getElementById("fileInputLabel");
+    const uploadButton = document.getElementById("uploadButton");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const fileList = document.getElementById("fileList");
+    const progressBar = document.getElementById("progressBar");
+    const progressFill = document.getElementById("progressFill");
+    const fileManager = document.getElementById("fileManager");
+    const minimizeFilesButton = document.getElementById("minimizeFiles");
+    const fileUploadSection = document.getElementById("fileUploadSection");
+    
     let saveTimeout, saveTimeout2;
     let notesContent = "";
     let notes2Content = "";
     let isNotesMinimized = false;
     let isNotes2Minimized = false;
+    let isFilesMinimized = false;
+    let selectedFiles = [];
     
     const notes2Ref = ref(db, "notes2");
 
@@ -331,17 +545,239 @@
       }
     }
 
-    // Initialize notes events
+    // Toggle file manager minimize/maximize
+    function toggleFiles() {
+      if (isFilesMinimized) {
+        fileUploadSection.style.display = "block";
+        fileList.style.display = "block";
+        minimizeFilesButton.textContent = "-";
+        isFilesMinimized = false;
+      } else {
+        fileUploadSection.style.display = "none";
+        fileList.style.display = "none";
+        minimizeFilesButton.textContent = "+";
+        isFilesMinimized = true;
+      }
+    }
+
+    // File management functions
+    function handleFileSelect(event) {
+      selectedFiles = Array.from(event.target.files);
+      updateFileInputLabel();
+      uploadButton.disabled = selectedFiles.length === 0;
+    }
+
+    function updateFileInputLabel() {
+      if (selectedFiles.length === 0) {
+        fileInputLabel.textContent = "اختر الملفات أو اسحبها هنا";
+      } else if (selectedFiles.length === 1) {
+        fileInputLabel.textContent = `تم اختيار ملف: ${selectedFiles[0].name}`;
+      } else {
+        fileInputLabel.textContent = `تم اختيار ${selectedFiles.length} ملفات`;
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 بايت';
+      const k = 1024;
+      const sizes = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function uploadFiles() {
+      if (selectedFiles.length === 0) return;
+
+      uploadButton.disabled = true;
+      uploadStatus.textContent = "جاري حفظ الملفات...";
+      progressBar.style.display = "block";
+
+      let uploadedCount = 0;
+      const totalFiles = selectedFiles.length;
+
+      try {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const file = selectedFiles[i];
+          
+          // Simulate progress
+          const progress = ((i + 1) / totalFiles) * 100;
+          progressFill.style.width = progress + '%';
+          
+          // Convert file to base64 for local storage
+          const fileData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+          });
+          
+          // Save file info to Firebase database
+          const fileInfo = {
+            name: file.name,
+            originalName: file.name,
+            size: file.size,
+            type: file.type,
+            fileData: fileData, // Store file as base64
+            uploadDate: Date.now(),
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+          };
+          
+          await push(filesRef, fileInfo);
+          uploadedCount++;
+          uploadStatus.textContent = `تم حفظ ${uploadedCount} من ${totalFiles} ملفات`;
+        }
+
+        uploadStatus.textContent = `تم حفظ ${uploadedCount} ملف بنجاح`;
+        uploadStatus.style.color = "green";
+        
+      } catch (error) {
+        console.error('Error saving files:', error);
+        uploadStatus.textContent = `خطأ في حفظ الملفات: ${error.message}`;
+        uploadStatus.style.color = "red";
+      }
+
+      uploadButton.disabled = false;
+      selectedFiles = [];
+      fileInput.value = '';
+      updateFileInputLabel();
+      
+      setTimeout(() => {
+        progressBar.style.display = "none";
+        progressFill.style.width = "0%";
+        uploadStatus.style.color = "#666";
+        uploadStatus.textContent = "";
+      }, 3000);
+
+      loadFiles();
+    }
+
+    async function downloadFile(fileData, fileName) {
+      try {
+        // Create download link from base64 data
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = fileData; // fileData is already base64 URL
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (error) {
+        console.error('Error downloading file:', error);
+        alert('خطأ في تحميل الملف');
+      }
+    }
+
+    async function deleteFile(fileId) {
+      if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;
+
+      try {
+        // Delete from database only (no storage to delete from)
+        await remove(ref(db, `files/${fileId}`));
+        loadFiles();
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        alert('خطأ في حذف الملف');
+      }
+    }
+
+    function loadFiles() {
+      onValue(filesRef, (snapshot) => {
+        fileList.innerHTML = "";
+        if (snapshot.exists()) {
+          snapshot.forEach((fileSnap) => {
+            const fileId = fileSnap.key;
+            const fileData = fileSnap.val();
+            
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            fileItem.innerHTML = `
+              <div class="file-info">
+                <div class="file-name">${fileData.originalName}</div>
+                <div class="file-size">${formatFileSize(fileData.size)}</div>
+              </div>
+              <div class="file-actions">
+                <button class="download-button" onclick="downloadFile('${fileData.fileData}', '${fileData.originalName}')">
+                  تحميل
+                </button>
+                <button class="delete-file-button" onclick="deleteFile('${fileId}')">
+                  حذف
+                </button>
+              </div>
+            `;
+            
+            fileList.appendChild(fileItem);
+          });
+        } else {
+          fileList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد ملفات مرفوعة</div>';
+        }
+      });
+    }
+
+    // Drag and drop functionality
+    function setupDragAndDrop() {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileInputLabel.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        fileInputLabel.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        fileInputLabel.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        fileInputLabel.classList.add('drag-over');
+      }
+
+      function unhighlight(e) {
+        fileInputLabel.classList.remove('drag-over');
+      }
+
+      fileInputLabel.addEventListener('drop', handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        selectedFiles = Array.from(files);
+        updateFileInputLabel();
+        uploadButton.disabled = selectedFiles.length === 0;
+      }
+    }
+
+    // Initialize event listeners
     notesTextarea.addEventListener("input", saveNotes);
     minimizeButton.addEventListener("click", toggleNotes);
     
-    // Initialize notes2 events
     notes2Textarea.addEventListener("input", saveNotes2);
     minimizeButton2.addEventListener("click", toggleNotes2);
 
-    // Load notes on page load
-    loadNotes();
+    fileInput.addEventListener('change', handleFileSelect);
+    uploadButton.addEventListener('click', uploadFiles);
+    minimizeFilesButton.addEventListener('click', toggleFiles);
 
+    // Make functions global for onclick handlers
+    window.downloadFile = downloadFile;
+    window.deleteFile = deleteFile;
+    window.addGroup = addGroup;
+    window.deleteGroup = deleteGroup;
+    window.renameGroup = renameGroup;
+    window.addLesson = addLesson;
+    window.deleteLesson = deleteLesson;
+    window.toggleLesson = toggleLesson;
+
+    // Load data on page load
+    loadNotes();
+    loadFiles();
+    setupDragAndDrop();
+
+    // Groups and lessons functionality
     function renderGroups() {
       onValue(groupsRef, (snapshot) => {
         container.innerHTML = "";
@@ -372,26 +808,22 @@
             </table>
           `;
 
-          // التعامل مع النقر على المجموعة لإظهار قائمة الروابط
+          // Handle group card click to show lessons
           card.addEventListener("click", (e) => {
-            // لا نقوم بأي شيء إذا تم النقر على زر أو حقل إدخال أو عنصر قابل للتحرير
             if (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT" || 
                 e.target.tagName === "A" || e.target.isContentEditable || 
                 e.target.tagName === "CHECKBOX" || e.target.type === "checkbox") {
               return;
             }
             
-            // الحصول على الجدول وإظهاره إذا كان مخفيًا
             const table = card.querySelector("table");
             if (table.style.display === "none") {
               table.style.display = "table";
-              
-              // حفظ حالة الجدول في localStorage
               localStorage.setItem(`table-${groupId}-open`, "true");
             }
           });
           
-          // التحقق من localStorage للتأكد من عرض الجداول المفتوحة سابقًا
+          // Check localStorage for previously opened tables
           const table = card.querySelector("table");
           if (localStorage.getItem(`table-${groupId}-open`) === "true") {
             table.style.display = "table";
@@ -410,10 +842,10 @@
               const isCompleted = lesson.completed || false;
               const row = document.createElement("tr");
               row.innerHTML = `
-                <td><input type="checkbox" ${isCompleted ? 'checked' : ''} onclick="toggleLessonComplete('${groupId}', '${lessonId}', this.checked)"></td>
-                <td><span contenteditable="true" onblur="renameLessonName('${groupId}', '${lessonId}', this.innerText.trim())">${lesson.name}</span></td>
-                <td><a href="${lesson.link}" target="_blank" onclick="markLessonVisited('${groupId}', '${lessonId}')">رابط</a></td>
-                <td><button onclick="deleteLesson('${groupId}', '${lessonId}')">حذف</button></td>
+                <td><input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleLesson('${groupId}', '${lessonId}', this.checked)"></td>
+                <td style="${isCompleted ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${lesson.name}</td>
+                <td><a href="${lesson.link}" target="_blank" style="${isCompleted ? 'opacity: 0.6;' : ''}">رابط</a></td>
+                <td><button onclick="deleteLesson('${groupId}', '${lessonId}')" style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer;">🗑️</button></td>
               `;
               tableBody.appendChild(row);
             });
@@ -422,63 +854,50 @@
       });
     }
 
-    window.addGroup = function() {
-      const name = document.getElementById("newGroupName").value.trim();
-      if (name) {
-        const newGroupRef = push(groupsRef);
-        set(newGroupRef, { name });
+    function addGroup() {
+      const groupName = document.getElementById("newGroupName").value.trim();
+      if (groupName) {
+        push(groupsRef, { name: groupName });
         document.getElementById("newGroupName").value = "";
       }
-    };
+    }
 
-    window.deleteGroup = function(groupId) {
-      if (confirm("هل أنت متأكد أنك تريد حذف هذه المجموعة؟")) {
+    function deleteGroup(groupId) {
+      if (confirm("هل أنت متأكد من حذف هذه المجموعة؟")) {
         remove(ref(db, `groups/${groupId}`));
+        localStorage.removeItem(`table-${groupId}-open`);
       }
-    };
+    }
 
-    window.renameGroup = function(groupId, newName) {
+    function renameGroup(groupId, newName) {
       if (newName) {
         update(ref(db, `groups/${groupId}`), { name: newName });
       }
-    };
+    }
 
-    window.addLesson = function(groupId) {
+    function addLesson(groupId) {
       const name = document.getElementById(`name-${groupId}`).value.trim();
       const link = document.getElementById(`link-${groupId}`).value.trim();
+      
       if (name && link) {
         const lessonsRef = ref(db, `groups/${groupId}/lessons`);
         push(lessonsRef, { name, link, completed: false });
         document.getElementById(`name-${groupId}`).value = "";
         document.getElementById(`link-${groupId}`).value = "";
       }
-    };
+    }
 
-    window.deleteLesson = function(groupId, lessonId) {
-      remove(ref(db, `groups/${groupId}/lessons/${lessonId}`));
-    };
-    
-    window.toggleLessonComplete = function(groupId, lessonId, isCompleted) {
-      const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
-      update(lessonRef, { completed: isCompleted });
-    };
-    
-    window.markLessonVisited = function(groupId, lessonId) {
-      // تعليم الدرس كمكتمل
-      const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
-      update(lessonRef, { completed: true });
-      
-      // حفظ حالة فتح الجدول في localStorage للاحتفاظ بها بعد العودة من الرابط
-      localStorage.setItem(`table-${groupId}-open`, "true");
-    };
-    
-    window.renameLessonName = function(groupId, lessonId, newName) {
-      if (newName) {
-        const lessonRef = ref(db, `groups/${groupId}/lessons/${lessonId}`);
-        update(lessonRef, { name: newName });
+    function deleteLesson(groupId, lessonId) {
+      if (confirm("هل أنت متأكد من حذف هذا الدرس؟")) {
+        remove(ref(db, `groups/${groupId}/lessons/${lessonId}`));
       }
-    };
+    }
 
+    function toggleLesson(groupId, lessonId, completed) {
+      update(ref(db, `groups/${groupId}/lessons/${lessonId}`), { completed });
+    }
+
+    // Initialize groups rendering
     renderGroups();
   </script>
 </body>
