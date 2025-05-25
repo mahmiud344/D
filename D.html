@@ -8,37 +8,50 @@
     body {
       font-family: Arial, sans-serif;
       background: #f0f0f0;
-      padding: 20px;
+      padding: 0;
+      margin: 0;
       direction: rtl;
-      margin-right: 250px; /* Make space for sidebar */
+    }
+
+    .main-container {
+      margin-right: 350px;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .section {
+      background: white;
+      margin-bottom: 30px;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3498db;
+    }
+
+    .notes-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .note-box {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #e9ecef;
     }
 
     h1 {
       text-align: center;
       color: #333;
-    }
-
-    .notes-container {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 300px;
-      z-index: 100;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      padding: 15px;
-      direction: rtl;
-    }
-
-    .notes-title {
-      font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 10px;
-      color: #333;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     .notes-textarea {
@@ -50,6 +63,7 @@
       resize: vertical;
       direction: rtl;
       font-family: Arial, sans-serif;
+      box-sizing: border-box;
     }
 
     .notes-status {
@@ -59,39 +73,12 @@
       text-align: left;
     }
 
-    .minimize-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      padding: 0;
-      color: #555;
-    }
-
     /* File management styles */
     .file-manager {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      width: 350px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      background: #f8f9fa;
       padding: 15px;
-      direction: rtl;
-      z-index: 100;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .file-manager-title {
-      font-weight: bold;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: #333;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-radius: 10px;
+      border: 1px solid #e9ecef;
     }
 
     .file-upload-section {
@@ -235,7 +222,7 @@
       position: fixed;
       top: 0;
       right: 0;
-      width: 250px;
+      width: 350px;
       height: 100vh;
       background: #2c3e50;
       color: white;
@@ -339,7 +326,7 @@
     .sidebar-toggle {
       position: fixed;
       top: 20px;
-      right: 260px;
+      right: 360px;
       background: #2c3e50;
       color: white;
       border: none;
@@ -347,6 +334,135 @@
       border-radius: 5px;
       cursor: pointer;
       z-index: 1001;
+    }
+
+    .sidebar-section {
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #34495e;
+      border-radius: 10px;
+    }
+
+    /* Notes section - Green theme */
+    .notes-section {
+      background: #27ae60 !important;
+      border: 2px solid #2ecc71;
+    }
+
+    .notes-section .sidebar-section-title {
+      color: #ecf0f1;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 8px;
+    }
+
+    .notes-section .notes-textarea {
+      background: #229954;
+      border-color: #2ecc71;
+      color: white;
+      height: 140px !important;
+      min-height: 140px;
+    }
+
+    .notes-section .notes-textarea::placeholder {
+      color: #d5f4e6;
+    }
+
+    /* Files section - Blue theme */
+    .files-section {
+      background: #3498db !important;
+      border: 2px solid #5dade2;
+    }
+
+    .files-section .sidebar-section-title {
+      color: #ecf0f1;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 8px;
+    }
+
+    .files-section .file-input-label {
+      background: #2980b9;
+      border-color: #2980b9;
+    }
+
+    .files-section .upload-button {
+      background: #1abc9c;
+    }
+
+    .files-section .file-item {
+      background: #2980b9;
+      border-color: #5dade2;
+    }
+
+    /* Pages section - Purple theme */
+    .pages-section {
+      background: #9b59b6 !important;
+      border: 2px solid #bb8fce;
+    }
+
+    .pages-section .sidebar-section-title {
+      color: #ecf0f1;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      padding-bottom: 8px;
+    }
+
+    .pages-section .page-form input {
+      background: #8e44ad;
+      color: white;
+      border-color: #bb8fce;
+    }
+
+    .pages-section .page-form input::placeholder {
+      color: #d7bde2;
+    }
+
+    .pages-section .page-form button {
+      background: #7d3c98;
+    }
+
+    .pages-section .page-form button:hover {
+      background: #6c3483;
+    }
+
+    .pages-section .page-item {
+      background: #8e44ad;
+    }
+
+    .sidebar-section-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #ecf0f1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar .notes-textarea {
+      background: #2c3e50;
+      color: white;
+      border: 1px solid #7f8c8d;
+    }
+
+    .sidebar .notes-textarea::placeholder {
+      color: #bdc3c7;
+    }
+
+    .sidebar .file-input-label {
+      background: #3498db;
+      border-color: #3498db;
+    }
+
+    .sidebar .upload-button {
+      background: #27ae60;
+    }
+
+    .sidebar .upload-button:disabled {
+      background: #7f8c8d;
+    }
+
+    .sidebar .file-item {
+      background: #2c3e50;
+      border-color: #7f8c8d;
     }
 
     .group-container {
@@ -449,7 +565,7 @@
     }
 
     @media (max-width: 768px) {
-      body {
+      .main-container {
         margin-right: 0;
         padding: 10px;
       }
@@ -468,26 +584,8 @@
         display: block;
       }
 
-      .notes-container {
-        position: relative;
-        top: 0 !important;
-        left: 0;
-        width: calc(100% - 30px);
-        margin-bottom: 20px;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      
-      #notes2Container {
-        margin-top: 20px;
-      }
-
-      .file-manager {
-        position: relative;
-        bottom: 0;
-        left: 0;
-        width: calc(100% - 30px);
-        margin: 20px auto;
+      .notes-section {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -501,74 +599,76 @@
 <body>
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
-    <div class="sidebar-title">صفحاتي المحفوظة</div>
-    
-    <div class="page-form">
-      <input type="text" id="pageName" placeholder="اسم الصفحة">
-      <input type="url" id="pageUrl" placeholder="رابط الصفحة">
-      <button onclick="addPage()">إضافة صفحة</button>
+    <!-- Notes Section -->
+    <div class="sidebar-section notes-section">
+      <div class="sidebar-section-title">📝 الملاحظات</div>
+      <div style="margin-bottom: 15px;">
+        <label style="font-size: 14px; margin-bottom: 5px; display: block;">الملاحظات الأساسية</label>
+        <textarea class="notes-textarea" id="notesTextarea" placeholder="اكتب ملاحظاتك الأساسية هنا..."></textarea>
+        <div class="notes-status" id="notesStatus" style="color: #bdc3c7;">تم الحفظ</div>
+      </div>
+      <div>
+        <label style="font-size: 14px; margin-bottom: 5px; display: block;">ملاحظات إضافية</label>
+        <textarea class="notes-textarea" id="notes2Textarea" placeholder="اكتب ملاحظاتك الإضافية هنا..."></textarea>
+        <div class="notes-status" id="notes2Status" style="color: #bdc3c7;">تم الحفظ</div>
+      </div>
     </div>
-    
-    <div class="pages-list" id="pagesList">
-      <!-- Pages will be loaded here -->
+
+    <!-- File Manager Section -->
+    <div class="sidebar-section files-section">
+      <div class="sidebar-section-title">📁 إدارة الملفات</div>
+      <div class="file-manager" id="fileManager">
+        <div class="file-upload-section" id="fileUploadSection">
+          <div class="file-input-wrapper">
+            <input type="file" class="file-input" id="fileInput" multiple>
+            <label for="fileInput" class="file-input-label" id="fileInputLabel">
+              اختر الملفات أو اسحبها هنا
+            </label>
+          </div>
+          <button class="upload-button" id="uploadButton" disabled>رفع الملفات</button>
+          <div class="upload-status" id="uploadStatus"></div>
+          <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="file-list" id="fileList" style="max-height: 150px;">
+          <!-- Uploaded files will be displayed here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Pages Section -->
+    <div class="sidebar-section pages-section">
+      <div class="sidebar-section-title">🔗 صفحاتي المحفوظة</div>
+      <div class="page-form">
+        <input type="text" id="pageName" placeholder="اسم الصفحة">
+        <input type="url" id="pageUrl" placeholder="رابط الصفحة">
+        <button onclick="addPage()">إضافة صفحة</button>
+      </div>
+      
+      <div class="pages-list" id="pagesList">
+        <!-- Pages will be loaded here -->
+      </div>
     </div>
   </div>
 
   <!-- Sidebar Toggle Button for Mobile -->
   <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
-  <div class="notes-container" id="notesContainer">
-    <div class="notes-title">
-      <span>الملاحظات 1</span>
-      <button class="minimize-button" id="minimizeNotes">-</button>
-    </div>
-    <textarea class="notes-textarea" id="notesTextarea" placeholder="اكتب ملاحظاتك هنا..."></textarea>
-    <div class="notes-status" id="notesStatus">تم الحفظ</div>
-  </div>
-  
-  <div class="notes-container" id="notes2Container" style="top: 250px;">
-    <div class="notes-title">
-      <span>الملاحظات 2</span>
-      <button class="minimize-button" id="minimizeNotes2">-</button>
-    </div>
-    <textarea class="notes-textarea" id="notes2Textarea" placeholder="اكتب ملاحظاتك الإضافية هنا..."></textarea>
-    <div class="notes-status" id="notes2Status">تم الحفظ</div>
-  </div>
-
-  <!-- File Manager Section -->
-  <div class="file-manager" id="fileManager">
-    <div class="file-manager-title">
-      <span>إدارة الملفات</span>
-      <button class="minimize-button" id="minimizeFiles">-</button>
-    </div>
-    
-    <div class="file-upload-section" id="fileUploadSection">
-      <div class="file-input-wrapper">
-        <input type="file" class="file-input" id="fileInput" multiple>
-        <label for="fileInput" class="file-input-label" id="fileInputLabel">
-          اختر الملفات أو اسحبها هنا
-        </label>
+  <div class="main-container">
+    <!-- Lessons Section -->
+    <div class="section">
+      <div class="section-title">📚 مجموعات الدروس</div>
+      
+      <div class="add-group">
+        <input type="text" id="newGroupName" placeholder="اسم المجموعة">
+        <button onclick="addGroup()">إضافة مجموعة</button>
       </div>
-      <button class="upload-button" id="uploadButton" disabled>رفع الملفات</button>
-      <div class="upload-status" id="uploadStatus"></div>
-      <div class="progress-bar" id="progressBar" style="display: none;">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
-    </div>
 
-    <div class="file-list" id="fileList">
-      <!-- Uploaded files will be displayed here -->
+      <div class="group-container" id="groupsContainer"></div>
     </div>
   </div>
-
-  <h1>مجموعات الدروس</h1>
-
-  <div class="add-group">
-    <input type="text" id="newGroupName" placeholder="اسم المجموعة">
-    <button onclick="addGroup()">إضافة مجموعة</button>
-  </div>
-
-  <div class="group-container" id="groupsContainer"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
@@ -597,14 +697,10 @@
     const container = document.getElementById("groupsContainer");
     const notesTextarea = document.getElementById("notesTextarea");
     const notesStatus = document.getElementById("notesStatus");
-    const notesContainer = document.getElementById("notesContainer");
-    const minimizeButton = document.getElementById("minimizeNotes");
 
     // Notes functionality
     const notes2Textarea = document.getElementById("notes2Textarea");
     const notes2Status = document.getElementById("notes2Status");
-    const notes2Container = document.getElementById("notes2Container");
-    const minimizeButton2 = document.getElementById("minimizeNotes2");
     
     // File management elements
     const fileInput = document.getElementById("fileInput");
@@ -615,7 +711,6 @@
     const progressBar = document.getElementById("progressBar");
     const progressFill = document.getElementById("progressFill");
     const fileManager = document.getElementById("fileManager");
-    const minimizeFilesButton = document.getElementById("minimizeFiles");
     const fileUploadSection = document.getElementById("fileUploadSection");
     
     // Sidebar elements
@@ -628,9 +723,6 @@
     let saveTimeout, saveTimeout2;
     let notesContent = "";
     let notes2Content = "";
-    let isNotesMinimized = false;
-    let isNotes2Minimized = false;
-    let isFilesMinimized = false;
     let selectedFiles = [];
     
     const notes2Ref = ref(db, "notes2");
@@ -686,50 +778,7 @@
       }, 1000);
     }
 
-    // Toggle notes minimize/maximize
-    function toggleNotes() {
-      if (isNotesMinimized) {
-        notesTextarea.style.display = "block";
-        notesStatus.style.display = "block";
-        minimizeButton.textContent = "-";
-        isNotesMinimized = false;
-      } else {
-        notesTextarea.style.display = "none";
-        notesStatus.style.display = "none";
-        minimizeButton.textContent = "+";
-        isNotesMinimized = true;
-      }
-    }
-    
-    // Toggle notes2 minimize/maximize
-    function toggleNotes2() {
-      if (isNotes2Minimized) {
-        notes2Textarea.style.display = "block";
-        notes2Status.style.display = "block";
-        minimizeButton2.textContent = "-";
-        isNotes2Minimized = false;
-      } else {
-        notes2Textarea.style.display = "none";
-        notes2Status.style.display = "none";
-        minimizeButton2.textContent = "+";
-        isNotes2Minimized = true;
-      }
-    }
-
-    // Toggle file manager minimize/maximize
-    function toggleFiles() {
-      if (isFilesMinimized) {
-        fileUploadSection.style.display = "block";
-        fileList.style.display = "block";
-        minimizeFilesButton.textContent = "-";
-        isFilesMinimized = false;
-      } else {
-        fileUploadSection.style.display = "none";
-        fileList.style.display = "none";
-        minimizeFilesButton.textContent = "+";
-        isFilesMinimized = true;
-      }
-    }
+    // Notes functions are now simplified without minimize functionality
 
     // File management functions
     function handleFileSelect(event) {
@@ -924,14 +973,9 @@
 
     // Initialize event listeners
     notesTextarea.addEventListener("input", saveNotes);
-    minimizeButton.addEventListener("click", toggleNotes);
-    
     notes2Textarea.addEventListener("input", saveNotes2);
-    minimizeButton2.addEventListener("click", toggleNotes2);
-
     fileInput.addEventListener('change', handleFileSelect);
     uploadButton.addEventListener('click', uploadFiles);
-    minimizeFilesButton.addEventListener('click', toggleFiles);
 
     // Sidebar functions
     function toggleSidebar() {
@@ -971,7 +1015,27 @@
     }
 
     function openPage(url) {
-      window.open(url, '_blank');
+      console.log('Attempting to open URL:', url);
+      
+      // Make sure URL has protocol
+      let finalUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        finalUrl = 'https://' + url;
+        console.log('Added https protocol. Final URL:', finalUrl);
+      }
+      
+      try {
+        const newWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          console.error('Failed to open window - popup blocked?');
+          alert('تم حظر فتح النافذة الجديدة. يرجى السماح للنوافذ المنبثقة أو نسخ الرابط: ' + finalUrl);
+        } else {
+          console.log('Window opened successfully');
+        }
+      } catch (error) {
+        console.error('Error opening page:', error);
+        alert('خطأ في فتح الصفحة: ' + error.message);
+      }
     }
 
     function loadPages() {
@@ -986,9 +1050,9 @@
             pageItem.className = 'page-item';
             
             pageItem.innerHTML = `
-              <div class="page-link" onclick="openPage('${pageData.url}')">
+              <a href="${pageData.url}" target="_blank" class="page-link" title="فتح ${pageData.name}">
                 ${pageData.name}
-              </div>
+              </a>
               <div class="page-actions">
                 <button class="delete-page-btn" onclick="deletePage('${pageId}')">
                   حذف
