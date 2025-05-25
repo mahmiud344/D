@@ -10,6 +10,7 @@
       background: #f0f0f0;
       padding: 20px;
       direction: rtl;
+      margin-right: 250px; /* Make space for sidebar */
     }
 
     h1 {
@@ -229,6 +230,125 @@
       transition: width 0.3s ease;
     }
 
+    /* Sidebar styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 250px;
+      height: 100vh;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #ecf0f1;
+      border-bottom: 1px solid #34495e;
+      padding-bottom: 10px;
+    }
+
+    .page-form {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #34495e;
+      border-radius: 8px;
+    }
+
+    .page-form input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #7f8c8d;
+      border-radius: 5px;
+      direction: rtl;
+      font-family: Arial, sans-serif;
+    }
+
+    .page-form button {
+      width: 100%;
+      padding: 8px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .page-form button:hover {
+      background: #2980b9;
+    }
+
+    .pages-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .page-item {
+      background: #34495e;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .page-link {
+      display: block;
+      padding: 12px;
+      color: #ecf0f1;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .page-link:hover {
+      background: #3498db;
+    }
+
+    .page-link:visited {
+      color: #ecf0f1;
+    }
+
+    .page-actions {
+      padding: 8px 12px;
+      background: #2c3e50;
+      border-top: 1px solid #7f8c8d;
+    }
+
+    .delete-page-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .delete-page-btn:hover {
+      background: #c0392b;
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 20px;
+      right: 260px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1001;
+    }
+
     .group-container {
       display: flex;
       flex-wrap: wrap;
@@ -329,6 +449,25 @@
     }
 
     @media (max-width: 768px) {
+      body {
+        margin-right: 0;
+        padding: 10px;
+      }
+
+      .sidebar {
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .sidebar-toggle {
+        right: 20px;
+        display: block;
+      }
+
       .notes-container {
         position: relative;
         top: 0 !important;
@@ -351,9 +490,33 @@
         margin: 20px auto;
       }
     }
+
+    @media (min-width: 769px) {
+      .sidebar-toggle {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-title">صفحاتي المحفوظة</div>
+    
+    <div class="page-form">
+      <input type="text" id="pageName" placeholder="اسم الصفحة">
+      <input type="url" id="pageUrl" placeholder="رابط الصفحة">
+      <button onclick="addPage()">إضافة صفحة</button>
+    </div>
+    
+    <div class="pages-list" id="pagesList">
+      <!-- Pages will be loaded here -->
+    </div>
+  </div>
+
+  <!-- Sidebar Toggle Button for Mobile -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+
   <div class="notes-container" id="notesContainer">
     <div class="notes-title">
       <span>الملاحظات 1</span>
@@ -429,6 +592,7 @@
     const groupsRef = ref(db, "groups");
     const notesRef = ref(db, "notes");
     const filesRef = ref(db, "files");
+    const pagesRef = ref(db, "pages");
 
     const container = document.getElementById("groupsContainer");
     const notesTextarea = document.getElementById("notesTextarea");
@@ -453,6 +617,13 @@
     const fileManager = document.getElementById("fileManager");
     const minimizeFilesButton = document.getElementById("minimizeFiles");
     const fileUploadSection = document.getElementById("fileUploadSection");
+    
+    // Sidebar elements
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const pagesList = document.getElementById("pagesList");
+    const pageNameInput = document.getElementById("pageName");
+    const pageUrlInput = document.getElementById("pageUrl");
     
     let saveTimeout, saveTimeout2;
     let notesContent = "";
@@ -762,6 +933,77 @@
     uploadButton.addEventListener('click', uploadFiles);
     minimizeFilesButton.addEventListener('click', toggleFiles);
 
+    // Sidebar functions
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+    }
+
+    function addPage() {
+      const pageName = pageNameInput.value.trim();
+      const pageUrl = pageUrlInput.value.trim();
+      
+      if (pageName && pageUrl) {
+        const pageInfo = {
+          name: pageName,
+          url: pageUrl,
+          dateAdded: Date.now()
+        };
+        
+        push(pagesRef, pageInfo).then(() => {
+          pageNameInput.value = '';
+          pageUrlInput.value = '';
+        }).catch(error => {
+          console.error('Error adding page:', error);
+          alert('خطأ في إضافة الصفحة');
+        });
+      } else {
+        alert('يرجى ملء اسم الصفحة والرابط');
+      }
+    }
+
+    function deletePage(pageId) {
+      if (confirm('هل أنت متأكد من حذف هذه الصفحة؟')) {
+        remove(ref(db, `pages/${pageId}`)).catch(error => {
+          console.error('Error deleting page:', error);
+          alert('خطأ في حذف الصفحة');
+        });
+      }
+    }
+
+    function openPage(url) {
+      window.open(url, '_blank');
+    }
+
+    function loadPages() {
+      onValue(pagesRef, (snapshot) => {
+        pagesList.innerHTML = "";
+        if (snapshot.exists()) {
+          snapshot.forEach((pageSnap) => {
+            const pageId = pageSnap.key;
+            const pageData = pageSnap.val();
+            
+            const pageItem = document.createElement('div');
+            pageItem.className = 'page-item';
+            
+            pageItem.innerHTML = `
+              <div class="page-link" onclick="openPage('${pageData.url}')">
+                ${pageData.name}
+              </div>
+              <div class="page-actions">
+                <button class="delete-page-btn" onclick="deletePage('${pageId}')">
+                  حذف
+                </button>
+              </div>
+            `;
+            
+            pagesList.appendChild(pageItem);
+          });
+        } else {
+          pagesList.innerHTML = '<div style="text-align: center; color: #bdc3c7; padding: 20px; font-size: 14px;">لا توجد صفحات محفوظة</div>';
+        }
+      });
+    }
+
     // Make functions global for onclick handlers
     window.downloadFile = downloadFile;
     window.deleteFile = deleteFile;
@@ -771,10 +1013,15 @@
     window.addLesson = addLesson;
     window.deleteLesson = deleteLesson;
     window.toggleLesson = toggleLesson;
+    window.addPage = addPage;
+    window.deletePage = deletePage;
+    window.openPage = openPage;
+    window.toggleSidebar = toggleSidebar;
 
     // Load data on page load
     loadNotes();
     loadFiles();
+    loadPages();
     setupDragAndDrop();
 
     // Groups and lessons functionality
