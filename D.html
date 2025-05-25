@@ -494,6 +494,7 @@
       padding: 20px;
       cursor: pointer;
       position: relative;
+      border-top: 5px solid #3498db; /* Default color, will be customizable */
     }
 
     .group-card:hover {
@@ -504,6 +505,58 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+    }
+    
+    .group-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .group-actions button {
+      padding: 4px 8px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .group-actions button:hover {
+      background: #2980b9;
+    }
+    
+    .group-actions button:last-child {
+      background: #e74c3c;
+    }
+    
+    .group-actions button:last-child:hover {
+      background: #c0392b;
+    }
+    
+    .group-content {
+      display: none;
+    }
+    
+    .color-picker {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+      background: transparent;
+      margin-right: 5px;
+    }
+    
+    .color-picker::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    
+    .color-picker::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
     }
 
     .group-name {
@@ -676,7 +729,8 @@
   <div class="main-container">
     <!-- Lessons Section -->
     <div class="section">
-      <div class="section-title">📚 مجموعات الدروس</div>
+      <div class="section-title" id="toggleHeader" style="cursor: pointer;">📚 مجموعات الدروس</div>
+      <div id="contentSection" style="display: block;">
       
       <div class="add-group">
         <input type="text" id="newGroupName" placeholder="اسم المجموعة">
@@ -684,8 +738,21 @@
       </div>
 
       <div class="group-container" id="groupsContainer"></div>
+      </div>
     </div>
   </div>
+
+  <script>
+    // Toggle functionality for lessons section
+    document.getElementById('toggleHeader').addEventListener('click', function() {
+      const contentSection = document.getElementById('contentSection');
+      if (contentSection.style.display === 'block') {
+        contentSection.style.display = 'none';
+      } else {
+        contentSection.style.display = 'block';
+      }
+    });
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
@@ -1098,6 +1165,63 @@
     window.deletePage = deletePage;
     window.openPage = openPage;
     window.toggleSidebar = toggleSidebar;
+    
+    // Toggle group content function
+    function toggleGroupContent(groupId) {
+      // Hide all other group contents first
+      const allContents = document.querySelectorAll('.group-content');
+      allContents.forEach(content => {
+        if (content.id !== `content-${groupId}`) {
+          content.style.display = 'none';
+        }
+      });
+      
+      // Toggle the clicked group content
+      const contentElement = document.getElementById(`content-${groupId}`);
+      if (contentElement.style.display === 'none') {
+        contentElement.style.display = 'block';
+      } else {
+        contentElement.style.display = 'none';
+      }
+    }
+    
+    // Function to hide group lessons
+    function hideGroupLessons(groupId) {
+      const table = document.getElementById(`table-${groupId}`);
+      if (table) {
+        const tbody = table.querySelector('tbody');
+        if (tbody.style.display === 'none') {
+          tbody.style.display = 'table-row-group';
+          const buttons = document.querySelectorAll(`.group-actions button`);
+          buttons.forEach(button => {
+            if (button.onclick.toString().includes(`hideGroupLessons('${groupId}')`)) {
+              button.textContent = 'اخفاء';
+            }
+          });
+        } else {
+          tbody.style.display = 'none';
+          const buttons = document.querySelectorAll(`.group-actions button`);
+          buttons.forEach(button => {
+            if (button.onclick.toString().includes(`hideGroupLessons('${groupId}')`)) {
+              button.textContent = 'إظهار';
+            }
+          });
+        }
+      }
+    }
+    
+    // Function to change group color
+    function changeGroupColor(groupId, color) {
+      const card = document.getElementById(`content-${groupId}`).parentElement;
+      card.style.borderTopColor = color;
+      
+      // Store the color preference in Firebase
+      set(ref(database, `groups/${groupId}/color`), color);
+    }
+    
+    window.toggleGroupContent = toggleGroupContent;
+    window.hideGroupLessons = hideGroupLessons;
+    window.changeGroupColor = changeGroupColor;
 
     // Load data on page load
     loadNotes();
@@ -1116,24 +1240,34 @@
           const card = document.createElement("div");
           card.className = "group-card";
 
+          // Set initial color if it exists in the group data
+          const groupColor = groupData.color || '#3498db';
+          
+          // Apply the color to the card
+          card.style.borderTopColor = groupColor;
+          
           card.innerHTML = `
-            <div class="group-header">
-              <span class="group-name" contenteditable="true" onblur="renameGroup('${groupId}', this.innerText.trim())">${groupData.name}</span>
+            <div class="group-header" onclick="toggleGroupContent('${groupId}')">
+              <span class="group-name" contenteditable="true" onblur="renameGroup('${groupId}', this.innerText.trim())" onclick="event.stopPropagation()">${groupData.name}</span>
               <div class="group-actions">
-                <button onclick="deleteGroup('${groupId}')">🗑️</button>
+                <input type="color" class="color-picker" value="${groupColor}" onchange="changeGroupColor('${groupId}', this.value)" onclick="event.stopPropagation();" title="تغيير لون المجموعة">
+                <button onclick="event.stopPropagation(); hideGroupLessons('${groupId}')">اخفاء</button>
+                <button onclick="event.stopPropagation(); deleteGroup('${groupId}')">🗑️</button>
               </div>
             </div>
-            <div class="lesson-form">
-              <input type="text" id="name-${groupId}" placeholder="اسم الدرس">
-              <input type="text" id="link-${groupId}" placeholder="الرابط">
-              <button onclick="addLesson('${groupId}')">إضافة درس</button>
+            <div id="content-${groupId}" class="group-content">
+              <div class="lesson-form">
+                <input type="text" id="name-${groupId}" placeholder="اسم الدرس">
+                <input type="text" id="link-${groupId}" placeholder="الرابط">
+                <button onclick="addLesson('${groupId}')">إضافة درس</button>
+              </div>
+              <table id="table-${groupId}">
+                <thead>
+                  <tr><th>تم</th><th>اسم الدرس</th><th>الرابط</th><th>حذف</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
             </div>
-            <table id="table-${groupId}" style="display: none;">
-              <thead>
-                <tr><th>تم</th><th>اسم الدرس</th><th>الرابط</th><th>حذف</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
           `;
 
           // Handle group card click to show lessons
