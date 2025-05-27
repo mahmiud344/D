@@ -1185,43 +1185,9 @@
       }
     }
     
-    // Function to hide group lessons
-    function hideGroupLessons(groupId) {
-      const table = document.getElementById(`table-${groupId}`);
-      if (table) {
-        const tbody = table.querySelector('tbody');
-        if (tbody.style.display === 'none') {
-          tbody.style.display = 'table-row-group';
-          const buttons = document.querySelectorAll(`.group-actions button`);
-          buttons.forEach(button => {
-            if (button.onclick.toString().includes(`hideGroupLessons('${groupId}')`)) {
-              button.textContent = 'اخفاء';
-            }
-          });
-        } else {
-          tbody.style.display = 'none';
-          const buttons = document.querySelectorAll(`.group-actions button`);
-          buttons.forEach(button => {
-            if (button.onclick.toString().includes(`hideGroupLessons('${groupId}')`)) {
-              button.textContent = 'إظهار';
-            }
-          });
-        }
-      }
-    }
-    
-    // Function to change group color
-    function changeGroupColor(groupId, color) {
-      const card = document.getElementById(`content-${groupId}`).parentElement;
-      card.style.borderTopColor = color;
-      
-      // Store the color preference in Firebase
-      set(ref(database, `groups/${groupId}/color`), color);
-    }
+
     
     window.toggleGroupContent = toggleGroupContent;
-    window.hideGroupLessons = hideGroupLessons;
-    window.changeGroupColor = changeGroupColor;
 
     // Load data on page load
     loadNotes();
@@ -1250,8 +1216,6 @@
             <div class="group-header" onclick="toggleGroupContent('${groupId}')">
               <span class="group-name" contenteditable="true" onblur="renameGroup('${groupId}', this.innerText.trim())" onclick="event.stopPropagation()">${groupData.name}</span>
               <div class="group-actions">
-                <input type="color" class="color-picker" value="${groupColor}" onchange="changeGroupColor('${groupId}', this.value)" onclick="event.stopPropagation();" title="تغيير لون المجموعة">
-                <button onclick="event.stopPropagation(); hideGroupLessons('${groupId}')">اخفاء</button>
                 <button onclick="event.stopPropagation(); deleteGroup('${groupId}')">🗑️</button>
               </div>
             </div>
